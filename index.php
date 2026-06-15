@@ -10,6 +10,11 @@ if (!isset($_SESSION["letrasCorretas"])) {
     $_SESSION["letrasCorretas"] = [];
 }
 
+// Inicializa os erros na sessão
+if (!isset($_SESSION["erros"])) {
+    $_SESSION["erros"] = 0;
+}
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     $letra = strtoupper($_POST["letra"]);
@@ -23,6 +28,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $mensagem = "Você acertou uma letra!";
 
     } else {
+
+        $_SESSION["erros"]++;
 
         $mensagem = "A letra não existe na palavra!";
     }
@@ -54,6 +61,8 @@ for ($i = 0; $i < strlen($palavra); $i++) {
     <h1>Jogo da Forca - PHP</h1>
 
     <h2><?php echo $palavraExibida; ?></h2>
+
+    <p>Erros: <?php echo $_SESSION["erros"]; ?>/6</p>
 
     <form method="POST">
 
