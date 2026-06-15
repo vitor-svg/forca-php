@@ -20,7 +20,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Jogo da Forca PHP</title>
+    <title>Jogo da Forca - PHP</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -42,9 +42,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     </form>
 
-    <p>
-        <?php echo $mensagem; ?>
-    </p>
+    <p><?php echo $mensagem; ?></p>
 
 </body>
 </html>
