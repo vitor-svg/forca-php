@@ -1,85 +1,114 @@
 <?php
-
 session_start();
 
-$palavra = "CASA";
-$mensagem = "";
 
-// Inicializa as letras corretas na sessão
-if (!isset($_SESSION["letrasCorretas"])) {
+$listaPalavras = ["CASA", "DESENVOLVIMENTO", "PROGRAMACAO", "ESTUDANTE", "INTERNET", "CODIGO", "PHP", "JAVASCRIPT"];
+
+// Reinicia a sessão se o usuário clicar em "Nova Partida"
+if (isset($_POST['reiniciar'])) {
+    session_unset();
+    session_destroy();
+    header("Location: " . $_SERVER['PHP_SELF']);
+    exit;
+}
+
+// Inicializa as variáveis do jogo na sessão
+if (!isset($_SESSION["palavra_secreta"])) {
+    $indiceAleatorio = array_rand($listaPalavras);
+    $_SESSION["palavra_secreta"] = strtoupper($listaPalavras[$indiceAleatorio]);
     $_SESSION["letrasCorretas"] = [];
-}
-
-// Inicializa os erros na sessão
-if (!isset($_SESSION["erros"])) {
     $_SESSION["erros"] = 0;
+    $_SESSION["status"] = "JOGANDO"; 
 }
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
+$palavraSecreta = $_SESSION["palavra_secreta"];
 
-    $letra = strtoupper($_POST["letra"]);
+// Processa a letra enviada via POST
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["letra"]) && $_SESSION["status"] == "JOGANDO") {
+    $letra = strtoupper(trim($_POST["letra"]));
 
-    if (strpos($palavra, $letra) !== false) {
-
-        if (!in_array($letra, $_SESSION["letrasCorretas"])) {
-            $_SESSION["letrasCorretas"][] = $letra;
+    if (!empty($letra)) {
+        if (strpos($palavraSecreta, $letra) !== false) {
+            if (!in_array($letra, $_SESSION["letrasCorretas"])) {
+                $_SESSION["letrasCorretas"][] = $letra;
+            }
+        } else {
+            $_SESSION["erros"]++;
         }
-
-        $mensagem = "Você acertou uma letra!";
-
-    } else {
-
-        $_SESSION["erros"]++;
-
-        $mensagem = "A letra não existe na palavra!";
     }
 }
 
-// Monta a palavra exibida
+// Monta o visual da palavra (_ _ _ _)
 $palavraExibida = "";
+$ganhou = true;
 
-for ($i = 0; $i < strlen($palavra); $i++) {
-
-    if (in_array($palavra[$i], $_SESSION["letrasCorretas"])) {
-        $palavraExibida .= $palavra[$i] . " ";
+for ($i = 0; $i < strlen($palavraSecreta); $i++) {
+    $letraAtual = $palavraSecreta[$i];
+    if (in_array($letraAtual, $_SESSION["letrasCorretas"])) {
+        $palavraExibida .= $letraAtual . " ";
     } else {
         $palavraExibida .= "_ ";
+        $ganhou = false;
     }
 }
 
+// Verifica se o jogo acabou
+if ($_SESSION["erros"] >= 6) {
+    $_SESSION["status"] = "PERDEU";
+    $palavraExibida = "";
+    for ($i = 0; $i < strlen($palavraSecreta); $i++) {
+        $palavraExibida .= $palavraSecreta[$i] . " ";
+    }
+} elseif ($ganhou) {
+    $_SESSION["status"] = "GANHOU";
+}
 ?>
 
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Jogo da Forca - PHP</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jogo da Forca</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <h1>Jogo da Forca - PHP</h1>
+    <div class="card">
+        <h1>Jogo da Forca</h1>
 
-    <h2><?php echo $palavraExibida; ?></h2>
+        <div class="palavra"><?php echo trim($palavraExibida); ?></div>
 
-    <p>Erros: <?php echo $_SESSION["erros"]; ?>/6</p>
+        <div class="erros">Erros: <?php echo $_SESSION["erros"]; ?>/6</div>
 
-    <form method="POST">
+        <form method="POST" autocomplete="off">
+            
+            <?php if ($_SESSION["status"] == "JOGANDO"): ?>
+                <input
+                    type="text"
+                    name="letra"
+                    placeholder="Digite uma letra"
+                    maxlength="1"
+                    required
+                    autofocus
+                >
+            <?php endif; ?>
 
-        <input
-            type="text"
-            name="letra"
-            maxlength="1"
-            required
-        >
+            <div class="botoes-container">
+                <?php if ($_SESSION["status"] == "JOGANDO"): ?>
+                    <button type="submit">Enviar</button>
+                <?php endif; ?>
+                
+                <button type="submit" name="reiniciar" value="1">Nova Partida</button>
+            </div>
+        </form>
 
-        <button type="submit">
-            Enviar
-        </button>
-
-    </form>
-
-    <p><?php echo $mensagem; ?></p>
+        <?php if ($_SESSION["status"] == "PERDEU"): ?>
+            <div class="status-mensagem perdeu">💀 Você perdeu!</div>
+        <?php elseif ($_SESSION["status"] == "GANHOU"): ?>
+            <div class="status-mensagem ganhou">🎉 Parabéns, você ganhou!</div>
+        <?php endif; ?>
+    </div>
 
 </body>
 </html>
