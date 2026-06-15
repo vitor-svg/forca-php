@@ -1,16 +1,42 @@
 <?php
 
+session_start();
+
 $palavra = "CASA";
 $mensagem = "";
+
+// Inicializa as letras corretas na sessão
+if (!isset($_SESSION["letrasCorretas"])) {
+    $_SESSION["letrasCorretas"] = [];
+}
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     $letra = strtoupper($_POST["letra"]);
 
     if (strpos($palavra, $letra) !== false) {
-        $mensagem = "A letra existe na palavra!";
+
+        if (!in_array($letra, $_SESSION["letrasCorretas"])) {
+            $_SESSION["letrasCorretas"][] = $letra;
+        }
+
+        $mensagem = "Você acertou uma letra!";
+
     } else {
+
         $mensagem = "A letra não existe na palavra!";
+    }
+}
+
+// Monta a palavra exibida
+$palavraExibida = "";
+
+for ($i = 0; $i < strlen($palavra); $i++) {
+
+    if (in_array($palavra[$i], $_SESSION["letrasCorretas"])) {
+        $palavraExibida .= $palavra[$i] . " ";
+    } else {
+        $palavraExibida .= "_ ";
     }
 }
 
@@ -26,6 +52,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <body>
 
     <h1>Jogo da Forca - PHP</h1>
+
+    <h2><?php echo $palavraExibida; ?></h2>
 
     <form method="POST">
 
